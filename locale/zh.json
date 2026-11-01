@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "聊天增强",
+    "description": "输入框内实时行内 Markdown、聊天记录中的 Mermaid 图表，以及用户消息的 Markdown 渲染。"
+  }
+}
