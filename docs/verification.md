@@ -37,7 +37,8 @@ git_branch: "main"
 | 输入框开关 | 通过：关闭后隐藏标记 0、代码样式 0；重开恢复 | `.research/verify/composer-toggle-report.json` |
 | 性能 | 200 行草稿插入约 3.0 秒，10 字符输入约 85 ms；无错误 | `scripts/verify-perf.mjs` |
 | 打包内容 | 通过：21 个文件，包含 `lib/client.js`、patch、locale、icon、src | `npm pack --dry-run --json` |
-| 卸载残留 | 待 Step 6 执行 | — |
+| 卸载残留 | 通过：移除后 `settings.section` 无 `chat-improve`，`conversation.user.text.node` 只剩内置 `text`；插件卸载无残留 | 本次会话的 Slots 查询 |
+| 重装 | 通过：`application: applied`，设置页与用户消息渲染器恢复 | 本次会话的 Slots 查询 |
 | Desktop 窗口 | 未做 DOM 断言；加载同一份 `lib/client.js` | — |
 
 ## 限制
