@@ -33,6 +33,7 @@ It switches `my-skills` to `skill/dsh-mermaid-charts`, copies the skill, commits
 
 - Edit only in this repository.
 - `my-skills` is a generated copy; do not edit it directly.
+- The hook checks out `skill/dsh-mermaid-charts` in `my-skills`. If you switch `my-skills` back to another branch, the skill files are not in that working tree until the hook switches again or you run `git -C E:\repos\my-skills switch skill/dsh-mermaid-charts`.
 - `metadata.version` must match in both copies.
 - The hook is local; a fresh clone must reinstall it. A server-side sync would need a GitHub Actions workflow and a cross-repository token.
 
@@ -40,8 +41,9 @@ It switches `my-skills` to `skill/dsh-mermaid-charts`, copies the skill, commits
 
 ```powershell
 Get-Item .dsh\skills\dsh-mermaid-charts | Select-Object LinkType,Target
+git -C E:\repos\my-skills switch skill/dsh-mermaid-charts
 Get-FileHash skills\dsh-mermaid-charts\SKILL.md
 Get-FileHash E:\repos\my-skills\skills\dsh-mermaid-charts\SKILL.md
 ```
 
-The two hashes must match after a sync.
+The two hashes must match after a sync. If you do not want to switch the `my-skills` working tree, read the committed copy with `git -C E:\repos\my-skills show skill/dsh-mermaid-charts:skills/dsh-mermaid-charts/SKILL.md`.

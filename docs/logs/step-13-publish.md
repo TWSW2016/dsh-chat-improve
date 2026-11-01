@@ -52,6 +52,7 @@ git_branch: "main"
 - 真实 remote 没有推送；`skill/dsh-mermaid-charts` 目前只在本地 `my-skills`。用户下一次 push project 时 hook 才会推送该分支。〔来源：无链接：命令输出；定位：2026-11-02 的 `git status --branch`；原因：终端输出无可分享链接〕
 - 发布后切回 `skill/video-dl`，所以工作区当前看不到 `skills/dsh-mermaid-charts`；它在技能分支上，不在 `video-dl` 分支。这是避免改变用户当前分支的取舍。〔来源：无链接：命令输出；定位：2026-11-02 的分支切换；原因：终端输出无可分享链接〕
 - hook 会切换 `my-skills` 到 `skill/dsh-mermaid-charts` 并在推送后停留在该分支；用户下次在 `my-skills` 工作时需要自己切回目标分支。当前没有自动切回，避免 push 失败时状态不一致。〔来源：[pre-push:37-53](../../scripts/git-hooks/pre-push#L37-L53)〕
+- 原 README 的手工哈希检查假设 `my-skills` 已在技能分支；切回 `skill/video-dl` 后该路径不存在。README 已补分支切换说明和 `git show` 读取方式。〔来源：[README.md:36-49](../../skills/README.md#L36-L49)〕
 
 ## 可复用经验
 
@@ -68,6 +69,7 @@ git_branch: "main"
 ## 涉及文件
 
 - `scripts/git-hooks/pre-push`：移除 no-diff 提前退出，改为无差异也 push。
+- `skills/README.md`：补充分支切换与 `git show` 读取说明。
 - `docs/logs/step-13-publish.md`：本日志。
 - `E:\repos\my-skills\skills\dsh-mermaid-charts\SKILL.md`：发布副本，提交 `6d101d7`。
 - `E:\repos\my-skills` 分支：新增 `skill/dsh-mermaid-charts`；工作区切回 `skill/video-dl`。
