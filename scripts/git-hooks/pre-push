@@ -54,9 +54,8 @@ cp -R "$SRC" "$DST"
 git -C "$MY_SKILLS" add -- "skills/$SKILL_NAME"
 if git -C "$MY_SKILLS" diff --cached --quiet -- "skills/$SKILL_NAME"; then
   echo "skill-sync: no changes"
-  exit 0
+else
+  short_sha="$(git -C "$PROJECT_ROOT" rev-parse --short HEAD)"
+  git -C "$MY_SKILLS" commit -m "skill: sync $SKILL_NAME from dsh-chat-improve@$short_sha" -- "skills/$SKILL_NAME" >/dev/null
 fi
-
-short_sha="$(git -C "$PROJECT_ROOT" rev-parse --short HEAD)"
-git -C "$MY_SKILLS" commit -m "skill: sync $SKILL_NAME from dsh-chat-improve@$short_sha" -- "skills/$SKILL_NAME" >/dev/null
 git -C "$MY_SKILLS" push -u origin "$BRANCH"
