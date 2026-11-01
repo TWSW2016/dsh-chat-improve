@@ -15,9 +15,41 @@ describe('looksLikeMermaid', () => {
     expect(looksLikeMermaid('%% a comment\ngraph TD\nA-->B')).toBe(true)
   })
 
+  it('accepts the beta, alias and elk spellings Mermaid registers', () => {
+    const samples = [
+      'radar-beta\n  axis a, b',
+      'treemap-beta\n  "Root"\n    "A" : 1',
+      'treemap\n  "Root"\n    "A" : 1',
+      'xychart\n  bar [1, 2]',
+      'xychart-beta\n  bar [1, 2]',
+      'sankey\n  A,B,10',
+      'packet\n  0-7: "a"',
+      'block\n  a',
+      'architecture\n  service a(server)[A]',
+      'architecture-beta\n  service a(server)[A]',
+      'flowchart-elk\n  A --> B',
+      'swimlane-beta\n  lane a',
+      'venn-beta\n  set A',
+      'ishikawa-beta\n  cause',
+      'treeView-beta\n  a',
+      'requirement\n  x',
+      'wardley-beta\n  a',
+      'cynefin-beta\n  a',
+      'eventmodeling\n  a',
+      'railroad-ebnf-beta\n  a',
+    ]
+    for (const sample of samples) {
+      expect(looksLikeMermaid(sample), sample).toBe(true)
+    }
+  })
+
   it('rejects other code that starts with a similar word', () => {
     expect(looksLikeMermaid('graphql { user { id } }')).toBe(false)
     expect(looksLikeMermaid('const graph = 1')).toBe(false)
+    expect(looksLikeMermaid('info: boot finished')).toBe(false)
+    expect(looksLikeMermaid('blockchain: 50')).toBe(false)
+    expect(looksLikeMermaid('radar sweep failed')).toBe(false)
+    expect(looksLikeMermaid('treemapish')).toBe(false)
     expect(looksLikeMermaid('')).toBe(false)
     expect(looksLikeMermaid('   \n\n')).toBe(false)
     expect(looksLikeMermaid(null)).toBe(false)
