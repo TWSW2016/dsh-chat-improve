@@ -8,6 +8,7 @@
 import { SettingsPage } from './settings-page.jsx'
 import { settingsStore } from './settings.js'
 import { startMermaidEnhancer } from './mermaid/enhance.js'
+import { startComposerFormatting } from './composer/index.js'
 import { UserMarkdown } from './user-text/UserMarkdown.jsx'
 
 /** @type {string[]} */
@@ -94,6 +95,28 @@ export function apply(ctx) {
   })
 
   ctx.on('theme/change', () => { mermaid?.refreshTheme() })
+
+  /** @type {(() => void) | undefined} */
+  let composer
+  const syncComposer = () => {
+    const enabled = settingsStore.getSnapshot().composerLivePreview
+    if (enabled && composer === undefined) {
+      composer = startComposerFormatting()
+    } else if (!enabled && composer !== undefined) {
+      composer()
+      composer = undefined
+    }
+  }
+
+  ctx.effect(() => {
+    syncComposer()
+    const unsubscribe = settingsStore.subscribe(syncComposer)
+    return () => {
+      unsubscribe()
+      composer?.()
+      composer = undefined
+    }
+  })
 
   ctx.effect(() => ctx.slots.inject('conversation.user.text.node', () => ctx.slots.register({
     name: 'conversation.user.text.node',
