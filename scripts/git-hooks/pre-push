@@ -1,0 +1,62 @@
+#!/bin/sh
+set -eu
+
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+SKILL_NAME="dsh-mermaid-charts"
+SKILL_REL="skills/$SKILL_NAME"
+SRC="$PROJECT_ROOT/$SKILL_REL"
+MY_SKILLS="${MY_SKILLS:-E:/repos/my-skills}"
+BRANCH="${MY_SKILLS_BRANCH:-skill/$SKILL_NAME}"
+DST="$MY_SKILLS/skills/$SKILL_NAME"
+
+[ -d "$SRC" ] || exit 0
+[ -d "$MY_SKILLS/.git" ] || { echo "skill-sync: my-skills not found at $MY_SKILLS" >&2; exit 1; }
+
+case "$DST" in
+  "$MY_SKILLS"/skills/*) ;;
+  *) echo "skill-sync: refusing to touch $DST" >&2; exit 1 ;;
+esac
+
+current="$(git -C "$PROJECT_ROOT" symbolic-ref --short -q HEAD || true)"
+pushed_current=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ -n "$current" ] && [ "$local_ref" = "refs/heads/$current" ]; then
+    pushed_current=1
+  fi
+done
+[ "$pushed_current" -eq 1 ] || exit 0
+
+if [ -n "$(git -C "$PROJECT_ROOT" status --porcelain -- "$SKILL_REL")" ]; then
+  echo "skill-sync: uncommitted changes under $SKILL_REL; commit first" >&2
+  exit 1
+fi
+
+if [ -n "$(git -C "$MY_SKILLS" status --porcelain)" ]; then
+  echo "skill-sync: my-skills has uncommitted changes; commit or stash first" >&2
+  exit 1
+fi
+
+if git -C "$MY_SKILLS" show-ref --verify --quiet "refs/heads/$BRANCH"; then
+  git -C "$MY_SKILLS" switch "$BRANCH" >/dev/null
+else
+  if git -C "$MY_SKILLS" show-ref --verify --quiet refs/heads/main; then
+    base="main"
+  else
+    base="origin/main"
+  fi
+  git -C "$MY_SKILLS" switch -c "$BRANCH" "$base" >/dev/null
+fi
+
+rm -rf "$DST"
+mkdir -p "$(dirname "$DST")"
+cp -R "$SRC" "$DST"
+
+git -C "$MY_SKILLS" add -- "skills/$SKILL_NAME"
+if git -C "$MY_SKILLS" diff --cached --quiet -- "skills/$SKILL_NAME"; then
+  echo "skill-sync: no changes"
+  exit 0
+fi
+
+short_sha="$(git -C "$PROJECT_ROOT" rev-parse --short HEAD)"
+git -C "$MY_SKILLS" commit -m "skill: sync $SKILL_NAME from dsh-chat-improve@$short_sha" -- "skills/$SKILL_NAME" >/dev/null
+git -C "$MY_SKILLS" push -u origin "$BRANCH"
