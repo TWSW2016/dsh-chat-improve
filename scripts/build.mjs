@@ -37,6 +37,8 @@ const result = await build({
   jsx: 'automatic',
   external: BASELINE,
   write: false,
+  minify: true,
+  legalComments: 'eof',
   logLevel: 'warning',
 })
 

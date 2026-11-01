@@ -1,11 +1,13 @@
 /**
  * Browser half entry of dsh-chat-improve.
  *
- * Step 1 registers the settings page. The composer, transcript, and user
- * message contributions arrive in later steps; every contribution is
- * effect-scoped so disabling the plugin leaves no residue.
+ * Step 2 adds the transcript Mermaid enhancer. Settings and the composer
+ * contribution keep their own modules; every contribution is effect-scoped so
+ * disabling the plugin leaves no residue.
  */
 import { SettingsPage } from './settings-page.jsx'
+import { settingsStore } from './settings.js'
+import { startMermaidEnhancer } from './mermaid/enhance.js'
 
 /** @type {string[]} */
 export const inject = ['locale', 'slots']
@@ -22,6 +24,11 @@ const en = {
   'settings.maxSource': 'Mermaid source limit (characters)',
   'settings.maxSourceHint': 'Diagrams whose source is longer stay as code blocks. Range 1000–200000.',
   'settings.reset': 'Reset to defaults',
+  'mermaid.error': 'Mermaid render failed.',
+  'mermaid.retry': 'Retry',
+  'mermaid.showSource': 'Source',
+  'mermaid.showDiagram': 'Diagram',
+  'mermaid.diagram': 'Mermaid diagram',
 }
 
 const zh = {
@@ -36,6 +43,11 @@ const zh = {
   'settings.maxSource': 'Mermaid 源码上限（字符）',
   'settings.maxSourceHint': '源码超过上限的图表保持代码块显示。范围 1000–200000。',
   'settings.reset': '恢复默认值',
+  'mermaid.error': 'Mermaid 渲染失败。',
+  'mermaid.retry': '重试',
+  'mermaid.showSource': '源码',
+  'mermaid.showDiagram': '图表',
+  'mermaid.diagram': 'Mermaid 图表',
 }
 
 /**
@@ -46,6 +58,7 @@ export function apply(ctx) {
   ctx.effect(() => ctx.locale.register('chat-improve', 'zh', zh))
 
   const t = ctx.locale.bind('chat-improve')
+
   ctx.effect(() => ctx.slots.inject('settings.section', () => ctx.slots.register({
     name: 'settings.section',
     id: 'chat-improve',
@@ -53,4 +66,31 @@ export function apply(ctx) {
     label: () => t('settings.title'),
     locale: 'chat-improve',
   }, SettingsPage)))
+
+  /** @type {{ dispose: () => void, refreshTheme: () => void } | undefined} */
+  let mermaid
+  const syncMermaid = () => {
+    const enabled = settingsStore.getSnapshot().mermaid
+    if (enabled && mermaid === undefined) {
+      mermaid = startMermaidEnhancer({
+        t,
+        getMaxSource: () => settingsStore.getSnapshot().mermaidMaxSourceChars,
+      })
+    } else if (!enabled && mermaid !== undefined) {
+      mermaid.dispose()
+      mermaid = undefined
+    }
+  }
+
+  ctx.effect(() => {
+    syncMermaid()
+    const unsubscribe = settingsStore.subscribe(syncMermaid)
+    return () => {
+      unsubscribe()
+      mermaid?.dispose()
+      mermaid = undefined
+    }
+  })
+
+  ctx.on('theme/change', () => { mermaid?.refreshTheme() })
 }
