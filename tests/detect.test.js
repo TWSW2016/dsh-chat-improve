@@ -25,7 +25,6 @@ describe('looksLikeMermaid', () => {
       'sankey\n  A,B,10',
       'packet\n  0-7: "a"',
       'block\n  a',
-      'architecture\n  service a(server)[A]',
       'architecture-beta\n  service a(server)[A]',
       'flowchart-elk\n  A --> B',
       'swimlane-beta\n  lane a',

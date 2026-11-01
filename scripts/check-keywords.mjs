@@ -9,7 +9,7 @@ import { readFile } from 'node:fs/promises'
 import { DIAGRAM_KEYWORDS } from '../src/mermaid/detect.js'
 
 /** First tokens Mermaid accepts but this plugin intentionally ignores. */
-const IGNORED = new Set(['info'])
+const IGNORED = new Set(['info', 'architecture'])
 
 const distPath = new URL('../node_modules/mermaid/dist/mermaid.core.mjs', import.meta.url)
 const source = await readFile(distPath, 'utf8')

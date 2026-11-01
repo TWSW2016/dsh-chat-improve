@@ -16,9 +16,10 @@
  * `node scripts/check-keywords.mjs` after upgrading Mermaid to list any first
  * token this table is missing.
  *
- * Deliberately excluded: `info`. Its only diagram body is a version banner and
- * its first token is a common log prefix, so the false positive rate is worse
- * than the value.
+ * Deliberately excluded: `info` and the bare `architecture`. `info` only ever
+ * draws a version banner and its first token is a common log prefix; bare
+ * `architecture` is accepted by Mermaid's detector but rejected by its parser,
+ * so listing it would only turn ordinary code blocks into error panels.
  */
 export const DIAGRAM_KEYWORDS = Object.freeze([
   // C4
@@ -63,7 +64,6 @@ export const DIAGRAM_KEYWORDS = Object.freeze([
   'block-beta',
   'packet',
   'packet-beta',
-  'architecture',
   'architecture-beta',
   'venn-beta',
   'ishikawa',

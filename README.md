@@ -5,7 +5,7 @@ DSH chat presentation plugin. Target: DeepSeek Harness `>= 0.2.1-rc.5`, Desktop 
 ## What it does
 
 - **Composer live inline rendering** — inline code, bold/italic/strikethrough, links, headings, and list markers are rendered inside the real composer while it stays editable; the caret line keeps its source.
-- **Mermaid in the transcript** — fenced `mermaid` blocks render as SVG with the DSH theme, a source/diagram toggle, and a source fallback on errors.
+- **Mermaid in the transcript** — fenced `mermaid` blocks render as SVG with the DSH theme, a source/diagram toggle, and a source fallback on errors. Diagrams wider than the column get an Actual size / Fit width toggle.
 - **User-message Markdown** — sent user messages render as Markdown instead of literal text.
 - Every feature has a setting, stored per browser origin, and can be switched off.
 
@@ -35,6 +35,7 @@ scripts/build.mjs     esbuild -> window.__ModuleLoader__.load factory
 scripts/verify-*.mjs  real-browser verification scripts
 locale/*.json         Plugin Manager title/description
 docs/logs/            Implementation log per step
+docs/mermaid-cheatsheet.md  Supported diagram keywords and syntax traps
 docs/verification.md  Real-GUI acceptance record
 ```
 
@@ -54,5 +55,8 @@ Install the directory as a profile bundle with `plugin_manager install_bundle`, 
 - Lines containing `@` or starting with `/` are not formatted, so reference chips and the slash menu keep working.
 - A single pasted multi-line block may stay raw until edited line by line.
 - The composer integration uses Lexical internals (`__lexicalEditor`, `_nodes`, `_pendingEditorState`). It fails open: on error the draft stays plain and the feature stops.
+- Detection is content-based because DSH does not expose the fence language in the DOM; a keyword table decides what renders (see `docs/mermaid-cheatsheet.md`). `node scripts/check-keywords.mjs` reports entries the installed Mermaid accepts but the table lacks.
+- Mermaid's timeline grammar cannot parse a period containing a colon (`2026-11-01 16:19`); the error panel explains the workaround.
+- Wide diagrams keep their natural size only after the Actual size toggle; the default is still fit-to-column.
 - The browser bundle is ~3.4 MiB because the Mermaid engine is included; the engine itself initializes on first diagram.
 - No core changes, no session writes, no model-visible input.
