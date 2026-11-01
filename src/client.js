@@ -8,6 +8,7 @@
 import { SettingsPage } from './settings-page.jsx'
 import { settingsStore } from './settings.js'
 import { startMermaidEnhancer } from './mermaid/enhance.js'
+import { UserMarkdown } from './user-text/UserMarkdown.jsx'
 
 /** @type {string[]} */
 export const inject = ['locale', 'slots']
@@ -93,4 +94,10 @@ export function apply(ctx) {
   })
 
   ctx.on('theme/change', () => { mermaid?.refreshTheme() })
+
+  ctx.effect(() => ctx.slots.inject('conversation.user.text.node', () => ctx.slots.register({
+    name: 'conversation.user.text.node',
+    key: 'text',
+    priority: 0,
+  }, UserMarkdown)))
 }
