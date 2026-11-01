@@ -33,6 +33,7 @@ const CSS = `
 [${MARKER}] .dsh-ci-mermaid-body svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
 [${MARKER}] .dsh-ci-mermaid-error { color: var(--dsw-alias-state-error-primary); font-size: 12px; margin: 4px 0; }
 [${MARKER}] .dsh-ci-mermaid-error button { margin-left: 8px; }
+[${MARKER}] .dsh-ci-mermaid-hint { color: var(--dsw-alias-label-secondary); font-size: 12px; margin: 4px 0; }
 `
 
 /**
@@ -118,6 +119,7 @@ export function startMermaidEnhancer({ t, getMaxSource, render = renderDiagram }
       const container = buildPanel({ t, svg, source, pre })
       content.append(container)
       pre.style.display = 'none'
+      attachWidthToggle(container, content, t)
       rendered.set(block, { container, pre, source })
     } catch (error) {
       claimed.delete(block)
@@ -156,6 +158,12 @@ export function startMermaidEnhancer({ t, getMaxSource, render = renderDiagram }
     })
     message.append(button)
     panel.append(message)
+    if (timelineHintNeeded(source)) {
+      const hint = document.createElement('div')
+      hint.className = 'dsh-ci-mermaid-hint'
+      hint.textContent = t('mermaid.timelinePeriodHint')
+      panel.append(hint)
+    }
     content.append(panel)
     claimed.add(block)
   }
@@ -222,6 +230,92 @@ function buildPanel({ t, svg, pre }) {
 
   panel.append(bar, body)
   return panel
+}
+
+/**
+ * Read a viewBox attribute without relying on SVG DOM classes.
+ * @param {Element | null} element - the rendered `<svg>`.
+ * @returns {{ width: number, height: number } | undefined} parsed viewBox.
+ */
+function readViewBox(element) {
+  if (element === null || element === undefined) return undefined
+  const raw = element.getAttribute('viewBox')
+  if (raw === null) return undefined
+  const parts = raw.trim().split(/[\s,]+/u).map(Number)
+  if (parts.length !== 4 || parts.some(part => !Number.isFinite(part))) return undefined
+  return { width: parts[2], height: parts[3] }
+}
+
+/**
+ * Restore an attribute that may not have existed before.
+ * @param {Element} element - target element.
+ * @param {string} name - attribute name.
+ * @param {string | null} value - original value.
+ */
+function restoreAttribute(element, name, value) {
+  if (value === null) {
+    element.removeAttribute(name)
+  } else {
+    element.setAttribute(name, value)
+  }
+}
+
+/**
+ * Offer an "actual size" toggle when the diagram is wider than its column, so
+ * wide Gantt or timeline charts stay readable instead of being scaled down.
+ * @param {HTMLElement} container - the diagram panel.
+ * @param {HTMLElement} content - `[data-code-block-content]`.
+ * @param {(key: string) => string} t - locale lookup.
+ */
+function attachWidthToggle(container, content, t) {
+  const svgElement = container.querySelector('svg')
+  const viewBox = readViewBox(svgElement)
+  if (svgElement === null || viewBox === undefined) return
+  const available = content.clientWidth
+  if (available > 0 && viewBox.width <= available + 1) return
+  const bar = container.querySelector('.dsh-ci-mermaid-bar')
+  if (bar === null) return
+
+  const button = document.createElement('button')
+  button.type = 'button'
+  button.setAttribute('aria-pressed', 'false')
+  button.textContent = t('mermaid.actualSize')
+
+  const originalMaxWidth = svgElement.style.maxWidth
+  const originalWidth = svgElement.getAttribute('width')
+  const originalHeight = svgElement.getAttribute('height')
+  let actual = false
+
+  button.addEventListener('click', event => {
+    event.preventDefault()
+    actual = !actual
+    if (actual) {
+      svgElement.style.maxWidth = 'none'
+      svgElement.setAttribute('width', String(viewBox.width))
+      svgElement.setAttribute('height', String(viewBox.height))
+    } else {
+      svgElement.style.maxWidth = originalMaxWidth
+      restoreAttribute(svgElement, 'width', originalWidth)
+      restoreAttribute(svgElement, 'height', originalHeight)
+    }
+    button.textContent = actual ? t('mermaid.fitWidth') : t('mermaid.actualSize')
+    button.setAttribute('aria-pressed', actual ? 'true' : 'false')
+  })
+  bar.append(button)
+}
+
+/**
+ * Whether a failed timeline uses a period containing a time of day, which the
+ * Mermaid timeline grammar cannot parse because `:` terminates the period.
+ * @param {string} source - fence content.
+ * @returns {boolean} true when the hint applies.
+ */
+function timelineHintNeeded(source) {
+  if (!/^\s*timeline\b/u.test(source)) return false
+  return source.split('\n').some(line => {
+    const separator = line.indexOf(': ')
+    return separator !== -1 && /\d{1,2}:\d{2}/u.test(line.slice(0, separator))
+  })
 }
 
 function injectStyle() {

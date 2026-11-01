@@ -31,6 +31,9 @@ const en = {
   'mermaid.showSource': 'Source',
   'mermaid.showDiagram': 'Diagram',
   'mermaid.diagram': 'Mermaid diagram',
+  'mermaid.fitWidth': 'Fit width',
+  'mermaid.actualSize': 'Actual size',
+  'mermaid.timelinePeriodHint': 'A timeline period cannot contain a colon; move the time into the event, for example 2026-11-01 : 16:19 start.',
 }
 
 const zh = {
@@ -50,6 +53,9 @@ const zh = {
   'mermaid.showSource': '源码',
   'mermaid.showDiagram': '图表',
   'mermaid.diagram': 'Mermaid 图表',
+  'mermaid.fitWidth': '适合宽度',
+  'mermaid.actualSize': '原始大小',
+  'mermaid.timelinePeriodHint': '时间线的时间段不能含冒号；把时间写进事件，例如 2026-11-01 : 16:19 开始。',
 }
 
 /**

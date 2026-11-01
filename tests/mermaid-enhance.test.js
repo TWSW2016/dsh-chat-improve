@@ -4,7 +4,20 @@ import { sanitizeSvg } from '../src/mermaid/engine.js'
 import { startMermaidEnhancer } from '../src/mermaid/enhance.js'
 
 const SVG = '<svg xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10"/></svg>'
+const WIDE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 400" width="100%">'
+  + '<rect width="1600" height="400"/></svg>'
+const NARROW_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%">'
+  + '<rect width="400" height="300"/></svg>'
 const t = key => key
+
+/**
+ * Give the block's content element a layout width; jsdom reports zero.
+ * @param {Element} element - `[data-code-block-content]`.
+ * @param {number} width - width in pixels.
+ */
+function overrideClientWidth(element, width) {
+  Object.defineProperty(element, 'clientWidth', { configurable: true, value: width })
+}
 
 /** Wait for the enhancer's async mount to settle. */
 async function flush() {
@@ -174,6 +187,69 @@ describe('startMermaidEnhancer', () => {
     expect(document.querySelector('[data-dsh-chat-improve-mermaid]')).toBeNull()
     expect(pre.style.display).toBe('')
     expect(document.getElementById('dsh-chat-improve-mermaid-style')).toBeNull()
+  })
+
+  it('offers an actual-size toggle for a diagram wider than its column', async () => {
+    const pre = installBlock('gantt\n  title t')
+    overrideClientWidth(document.querySelector('[data-code-block-content]'), 800)
+    const { controller } = start({ render: async () => WIDE_SVG })
+    controller.scanNow()
+    await flush()
+
+    const panel = document.querySelector('[data-dsh-chat-improve-mermaid]')
+    const buttons = [...panel.querySelectorAll('button')]
+    const sizeToggle = buttons.find(button => button.textContent === 'mermaid.actualSize')
+    expect(sizeToggle).toBeDefined()
+    expect(sizeToggle.getAttribute('aria-pressed')).toBe('false')
+
+    const svg = panel.querySelector('svg')
+    sizeToggle.click()
+    expect(svg.style.maxWidth).toBe('none')
+    expect(svg.getAttribute('width')).toBe('1600')
+    expect(svg.getAttribute('height')).toBe('400')
+    expect(sizeToggle.textContent).toBe('mermaid.fitWidth')
+    expect(sizeToggle.getAttribute('aria-pressed')).toBe('true')
+
+    sizeToggle.click()
+    expect(svg.style.maxWidth).toBe('')
+    expect(svg.getAttribute('width')).toBe('100%')
+    expect(sizeToggle.textContent).toBe('mermaid.actualSize')
+    expect(pre.style.display).toBe('none')
+    controller.dispose()
+  })
+
+  it('keeps a single toggle for diagrams that fit the column', async () => {
+    installBlock('flowchart TD\n  A --> B')
+    overrideClientWidth(document.querySelector('[data-code-block-content]'), 800)
+    const { controller } = start({ render: async () => NARROW_SVG })
+    controller.scanNow()
+    await flush()
+
+    const panel = document.querySelector('[data-dsh-chat-improve-mermaid]')
+    expect(panel.querySelectorAll('button')).toHaveLength(1)
+    controller.dispose()
+  })
+
+  it('explains the timeline colon limit when parsing fails', async () => {
+    installBlock('timeline\n  title t\n  2026-11-01 16:19 : step 0')
+    const { controller } = start({ render: async () => { throw new Error('boom') } })
+    controller.scanNow()
+    await flush()
+
+    const panel = document.querySelector('[data-dsh-chat-improve-mermaid]')
+    expect(panel.textContent).toContain('mermaid.timelinePeriodHint')
+    controller.dispose()
+  })
+
+  it('does not add the timeline hint to other diagrams', async () => {
+    installBlock('flowchart TD\n  A -->')
+    const { controller } = start({ render: async () => { throw new Error('boom') } })
+    controller.scanNow()
+    await flush()
+
+    const panel = document.querySelector('[data-dsh-chat-improve-mermaid]')
+    expect(panel.textContent).not.toContain('mermaid.timelinePeriodHint')
+    controller.dispose()
   })
 })
 
