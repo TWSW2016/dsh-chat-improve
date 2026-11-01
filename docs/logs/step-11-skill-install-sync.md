@@ -10,9 +10,30 @@ git_branch: "main"
 
 # Step 11 — 项目技能激活与自动同步
 
-## 目标
+## 交接摘要
+
+- 当前状态：junction 已创建，hook 已安装并通过安装幂等、LF 和语法检查；DSH 技能目录已出现 `dsh-mermaid-charts`。
+- 下一步：用临时 bare remote 做 hook 端到端测试。
+- 阻塞：无。
+- 关键文件：`scripts/setup-skill-sync.ps1`、`scripts/git-hooks/pre-push`、`.gitignore`。
+- 真实 `my-skills` 和 remote 未改动。
+
+## 目标与请求
 
 让 `skills/dsh-mermaid-charts/SKILL.md` 在不安装到全局的前提下被本项目的 DSH 发现，并建立 project 到 `my-skills` 的自动同步入口。〔来源：[README.md:5-37](../../skills/README.md#L5-L37)〕
+
+## 执行与命令
+
+工作目录为 `E:\Repos\dsh-chat-improve`，时间为 2026-11-02。
+
+| 命令 | 退出码 | 关键输出 |
+| --- | --- | --- |
+| `pwsh -File scripts/setup-skill-sync.ps1` | 0 | 创建 junction、安装 hook |
+| 再次运行同一脚本 | 0 | `junction already present` |
+| `Get-Item .dsh\skills\dsh-mermaid-charts` | 0 | `LinkType: Junction` |
+| `bash -n .git/hooks/pre-push` | 0 | 语法通过 |
+
+〔来源：无链接：命令输出；定位：2026-11-02 的上述命令；原因：终端输出无可分享链接〕
 
 ## 实现
 
@@ -21,7 +42,7 @@ git_branch: "main"
 - `.gitignore` 增加 `.dsh/skills/`；真实技能文件仍在 `skills/`，junction 不入库。〔来源：[.gitignore:6](../../.gitignore#L6)〕
 - 你没有指定分支；`my-skills` 当前在 `skill/video-dl`，hook 默认使用独立的 `skill/dsh-mermaid-charts`，避免混到其它技能分支。〔来源：[pre-push:7](../../scripts/git-hooks/pre-push#L7)〕
 
-## 验证
+## 结果与证据
 
 - 第一次运行 setup：创建 junction，安装 hook。〔来源：无链接：命令输出；定位：2026-11-02 运行 `pwsh -File scripts/setup-skill-sync.ps1`；原因：终端输出无可分享链接〕
 - 第二次运行 setup：输出 `junction already present`，没有重复创建；脚本幂等。〔来源：无链接：命令输出；定位：2026-11-02 第二次运行同一脚本；原因：终端输出无可分享链接〕
@@ -43,7 +64,21 @@ git_branch: "main"
 - hook 文件必须是 LF；安装脚本读入后统一 `\r\n` 为 `\n`，再用 UTF-8 无 BOM 写入。〔来源：[setup-skill-sync.ps1:45-55](../../scripts/setup-skill-sync.ps1#L45-L55)〕
 - 用 Git for Windows 的 `bash -n` 检查 hook；系统自带的 `bash.exe` 是 WSL，路径解析不同。〔来源：无链接：命令输出；定位：2026-11-02 的 `Get-Command bash.exe` 与 Git Bash 语法检查；原因：终端输出无可分享链接〕
 
-## 下一步
+## 决策
+
+- 用目录 junction 而不是符号链接；本机没有 `SeCreateSymbolicLinkPrivilege`，junction 可免特权且 DSH 跟随。〔来源：无链接：本机权限记录；定位：`~/.dsh/AGENTS.md` 的链接权限一节；原因：全局指令不在项目仓库内〕
+- 真实文件留在 `skills/` 并提交；`.dsh/skills/` 只放 junction 且忽略，避免 Git 重复跟踪。〔来源：[.gitignore:6](../../.gitignore#L6)〕
+- hook 使用独立的 `skill/dsh-mermaid-charts` 分支，不混到 `my-skills` 当前的 `skill/video-dl`。〔来源：[pre-push:7](../../scripts/git-hooks/pre-push#L7)〕
+
+## 涉及文件
+
+- `scripts/setup-skill-sync.ps1`：新增 junction 与 hook 安装脚本。
+- `scripts/git-hooks/pre-push`：新增同步 hook。
+- `.gitignore`：新增 `.dsh/skills/`。
+- `docs/logs/step-11-skill-install-sync.md`：本日志。
+- `.dsh/skills/dsh-mermaid-charts`：本地 junction，未入库。
+
+## 未决与下一步
 
 Step 12：用临时 bare remote + 临时 `my-skills` 克隆做 hook 端到端测试，再跑 `SKILL.md` 的 17 条 parse、`npm test` 和 `check-keywords`；记录失败并修复。〔来源：[SKILL.md:400-432](../../skills/dsh-mermaid-charts/SKILL.md#L400-L432)〕
 

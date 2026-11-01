@@ -10,9 +10,28 @@ git_branch: "main"
 
 # Step 10 — dsh-mermaid-charts 技能初稿
 
-## 目标
+## 交接摘要
+
+- 当前状态：技能正文 `SKILL.md` 与 `skills/README.md` 已落盘并提交；17 条 Mermaid 示例 parse 通过。
+- 下一步：建立 junction、安装 pre-push hook、验证自动同步。
+- 阻塞：无。
+- 关键文件：`skills/dsh-mermaid-charts/SKILL.md`、`skills/README.md`。
+- 本步未改动插件源码和 `my-skills`。
+
+## 目标与请求
 
 在项目内建立 `skills/dsh-mermaid-charts/SKILL.md`，把 Mermaid 写作规则、16 类成功模板、边界案例、插件开发附录和验证方法写成一个可被 DSH 项目技能根加载的单文件技能。〔来源：[SKILL.md:1-19](../../skills/dsh-mermaid-charts/SKILL.md#L1-L19)〕
+
+## 执行与命令
+
+工作目录为 `E:\Repos\dsh-chat-improve`，时间为 2026-11-02。
+
+| 命令 | 退出码 | 关键输出 |
+| --- | --- | --- |
+| `node .research/validate-skill.mjs "skills\dsh-mermaid-charts\SKILL.md"` | 0 | 17 条 `OK`，`failures=0` |
+| `node .research/parse-matrix.mjs` | 0 | timeline/radar/sankey 等失败与放行对照 |
+
+〔来源：无链接：命令输出；定位：2026-11-02 的上述命令；原因：终端输出无可分享链接〕
 
 ## 实现
 
@@ -23,7 +42,7 @@ git_branch: "main"
 - 插件开发附录记录 DOM 缝、关键字检查脚本、`mermaid.initialize`/`parse`/`render` 的配置、主题缓存、宽度切换和新增类型清单。〔来源：[SKILL.md:361-399](../../skills/dsh-mermaid-charts/SKILL.md#L361-L399)〕
 - 新增 `skills/README.md`，记录项目技能根不是 `./skills`、junction 方案和两仓契约。〔来源：[README.md:1-47](../../skills/README.md#L1-L47)〕
 
-## 验证
+## 结果与证据
 
 - 用 jsdom + Mermaid 11.17.2 提取 `SKILL.md` 中全部 `mermaid` 围栏并逐条 `mermaid.parse`：17 条全部 `OK`，退出码 0。〔来源：无链接：命令输出；定位：2026-11-02 在 `E:\Repos\dsh-chat-improve` 运行 `node .research/validate-skill.mjs "skills\dsh-mermaid-charts\SKILL.md"`；原因：终端输出无可分享链接〕
 - 坏例使用 `text` 围栏，不进入 parse 统计；好例使用 `mermaid` 围栏，保证验证脚本只检查应通过的源。〔来源：[SKILL.md:283-305](../../skills/dsh-mermaid-charts/SKILL.md#L283-L305)〕
@@ -44,7 +63,20 @@ git_branch: "main"
 - 用 `.research/figure/final/*.mmd` 作为模板源，逐条复制而不是凭记忆重写；模板已经过插件的 strict 配置验收。〔来源：[step-09-docs-and-verification.md:29-50](step-09-docs-and-verification.md#L29-L50)〕
 - 中文标签矩阵按“类型 + 字段 + 是否加引号”记录，比“某类型支持中文”更可执行。〔来源：[SKILL.md:314-329](../../skills/dsh-mermaid-charts/SKILL.md#L314-L329)〕
 
-## 下一步
+## 决策
+
+- 技能拆成“成功模板、边界案例、插件附录”三段，先给可照抄的成功形状，再给失败修正；插件规则不放在开头，避免写作时被实现细节淹没。〔来源：[SKILL.md:21-464](../../skills/dsh-mermaid-charts/SKILL.md#L21-L464)〕
+- 中文标签不写成“全 ASCII”或“全加引号”，而是按类型和字段给出矩阵；`radar`/`sankey` 仍 ASCII，`requirement`/`venn`/`wardley`/`xychart` 加引号。〔来源：[SKILL.md:314-329](../../skills/dsh-mermaid-charts/SKILL.md#L314-L329)〕
+- 坏例用 `text` 围栏，避免验证脚本把故意失败的例子计为失败；好例用 `mermaid` 围栏。〔来源：[SKILL.md:283-305](../../skills/dsh-mermaid-charts/SKILL.md#L283-L305)〕
+
+## 涉及文件
+
+- `skills/dsh-mermaid-charts/SKILL.md`：新增技能正文。
+- `skills/README.md`：新增项目技能目录说明。
+- `docs/logs/step-10-skill-authoring.md`：本日志。
+- 未改动插件源码、`.gitignore` 和 `my-skills`。
+
+## 未决与下一步
 
 Step 11：新增 `scripts/setup-skill-sync.ps1` 和 `scripts/git-hooks/pre-push`，建 `.dsh/skills` junction，更新 `.gitignore`，然后提交并写 Step 11 日志。〔来源：[README.md:12-37](../../skills/README.md#L12-L37)〕
 
