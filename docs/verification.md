@@ -1,11 +1,11 @@
 ---
 title: "dsh-chat-improve 验收记录"
 created: 2026-11-01
-updated: 2026-11-01
+updated: 2026-11-02
 log_deai_profile: "agent"
 log_deai_version: "0.1.4"
 tags: ["log-deai", "project/dsh-chat-improve", "type/progress", "topic/dsh-plugin"]
-git_branch: "main"
+git_branch: "fix/user-message-extra-newline"
 ---
 
 # dsh-chat-improve 验收记录
@@ -28,6 +28,7 @@ git_branch: "main"
 | 主题切换刷新 | 单元测试覆盖；浏览器未切换明暗后复查 | `tests/mermaid-enhance.test.js` |
 | 用户消息 Markdown | 通过：粗体、代码、斜体、删除线渲染，原文标记不可见 | `.research/verify/user-markdown.png` |
 | 用户消息开关 | 通过：关闭后显示 `**bold**` 原文，重开恢复 | `.research/verify/user-markdown-off.png` |
+| 用户消息空行 | 通过：干净两项列表 86px、2 块、块后 0 换行；1/2/3 消息 130px、3 块、块后 0 换行 | `.research/verify/user-newline-verify.json`、`user-newline-verify.png` |
 | 输入框行内渲染 | 通过：多行草稿隐藏 10 个标记，代码/列表/标题/强调渲染 | `.research/verify/composer.png` |
 | 输入框光标行 | 通过：点入代码正文后标记 reveal，输入插入正文 | `.research/verify/composer-revealed.png` |
 | 输入框失焦恢复 | 通过：失焦后重新隐藏标记并恢复代码样式 | `.research/verify/composer-report.json` |
@@ -45,14 +46,18 @@ git_branch: "main"
 
 - 输入框只做行内与行级前缀；代码块、表格、图片、公式仍为原文。〔来源：[format.js:33-95](../src/composer/format.js#L33-L95)〕
 - 一次性粘贴的多行文本若落在单个文本节点内，可能保持原文；逐行输入与 Shift+Enter 分行正常。〔来源：无链接：验证观察；定位：`verify-perf.mjs` 的单节点 14k 草稿；原因：验证产物未提交〕
+- 用户消息里真实存在的空行会保留，渲染器不折叠有意空行；CRLF 只算一次换行，孤立 `\r` 按 `pre-wrap` 的浏览器行为忽略。〔来源：[plan.js:17-18](../src/user-text/plan.js#L17-L18)〕
 - Desktop 窗口没有独立断言；Web GUI 与 Desktop 共用同一 bundle。〔来源：无链接：验证缺口；定位：本文件“结果”表；原因：会话无可分享链接〕
 
 ## 来源
 
 - [verify-web.mjs:1-145](../scripts/verify-web.mjs#L1-L145)：Mermaid 与设置的真实验证。
+- [verify-user-newline.mjs:86-105](../scripts/verify-user-newline.mjs#L86-L105)：用户消息块后换行检查与 86px/130px 判定。
+- [plan.js:17-18](../src/user-text/plan.js#L17-L18)：CRLF 与孤立 CR 的归一化。
 - [format.js:33-95](../src/composer/format.js#L33-L95)：输入框能力边界。
 - 无链接：用户决策；定位：2026-11-01 本会话；原因：会话无可分享链接。
 - 无链接：验证环境；定位：`http://127.0.0.1:3099` 与 `.research/verify/`；原因：验证产物未提交。
+- 无链接：本次浏览器验证；定位：`.research/verify/user-newline-verify.json`、`user-newline-verify.png`；用途：用户消息空行结果；原因：`.research/` 未提交。
 - 无链接：验证观察；定位：`verify-perf.mjs` 的单节点草稿；原因：验证产物未提交。
 - 无链接：验证缺口；定位：本文件“限制”节；原因：会话无可分享链接。
 

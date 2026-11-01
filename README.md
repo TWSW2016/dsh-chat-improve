@@ -6,7 +6,7 @@ DSH chat presentation plugin. Target: DeepSeek Harness `>= 0.2.1-rc.5`, Desktop 
 
 - **Composer live inline rendering** — inline code, bold/italic/strikethrough, links, headings, and list markers are rendered inside the real composer while it stays editable; the caret line keeps its source.
 - **Mermaid in the transcript** — fenced `mermaid` blocks render as SVG with the DSH theme, a source/diagram toggle, and a source fallback on errors. Diagrams wider than the column get an Actual size / Fit width toggle.
-- **User-message Markdown** — sent user messages render as Markdown instead of literal text.
+- **User-message Markdown** — sent messages render lists, headings, quotes, rules, and code blocks; block lines do not add an extra blank line, and CRLF input keeps a single line break.
 - Every feature has a setting, stored per browser origin, and can be switched off.
 
 Not in scope: images (already native), raw HTML, LaTeX in the composer, tables/code-block cards in the composer, in-place edit-and-resend (future DSH core capability).
@@ -54,6 +54,7 @@ Install the directory as a profile bundle with `plugin_manager install_bundle`, 
 - The caret line is intentionally raw; arrow-key reveal depends on the DSH composer keymap, while clicking a rendered run always reveals it.
 - Lines containing `@` or starting with `/` are not formatted, so reference chips and the slash menu keep working.
 - A single pasted multi-line block may stay raw until edited line by line.
+- A blank line that is actually present in a sent message is preserved; the renderer does not collapse intentional blank lines. The transcript reader treats CRLF as one break and ignores a lone CR, matching `white-space: pre-wrap`.
 - The composer integration uses Lexical internals (`__lexicalEditor`, `_nodes`, `_pendingEditorState`). It fails open: on error the draft stays plain and the feature stops.
 - Detection is content-based because DSH does not expose the fence language in the DOM; a keyword table decides what renders (see `docs/mermaid-cheatsheet.md`). `node scripts/check-keywords.mjs` reports entries the installed Mermaid accepts but the table lacks.
 - Mermaid's timeline grammar cannot parse a period containing a colon (`2026-11-01 16:19`); the error panel explains the workaround.
