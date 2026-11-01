@@ -8,6 +8,7 @@
 import { UserTextRun } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useSettings } from '../use-settings.js'
 import { scanInline } from './inline.js'
+import { planUserMarkdown } from './plan.js'
 
 const codeStyle = {
   fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
@@ -33,6 +34,18 @@ const blockCodeStyle = {
   overflowX: 'auto',
   fontSize: '0.92em',
 }
+const headingStyle = { display: 'block', fontWeight: 600, fontSize: '1.02em' }
+const quoteStyle = {
+  display: 'block',
+  borderLeft: '2px solid var(--dsw-alias-border-l2)',
+  paddingLeft: 8,
+  color: 'var(--dsw-alias-label-secondary)',
+}
+const ruleStyle = {
+  display: 'block',
+  borderTop: '1px solid var(--dsw-alias-border-l1)',
+  margin: '6px 0',
+}
 
 /**
  * Render one user text run.
@@ -52,84 +65,40 @@ export function UserMarkdown({ node, raw }) {
  * @returns {import('react').ReactNode} rendered content.
  */
 export function UserMarkdownText({ text }) {
-  const lines = String(text).replace(/\r\n?/g, '\n').split('\n')
+  const tokens = planUserMarkdown(text)
   const output = []
-  let fence = null
 
-  const pushLine = (line, key) => {
-    const heading = /^(#{1,6})\s+(.*)$/u.exec(line)
-    if (heading !== null) {
-      output.push(
-        <span key={key} style={{ display: 'block', fontWeight: 600, fontSize: '1.02em' }}>
-          {renderInline(scanInline(heading[2]))}
-        </span>,
-      )
-      return
-    }
-    const quote = /^>\s?(.*)$/u.exec(line)
-    if (quote !== null) {
-      output.push(
-        <span key={key} style={{
-          display: 'block',
-          borderLeft: '2px solid var(--dsw-alias-border-l2)',
-          paddingLeft: 8,
-          color: 'var(--dsw-alias-label-secondary)',
-        }}>
-          {renderInline(scanInline(quote[1]))}
-        </span>,
-      )
-      return
-    }
-    const item = /^(\s*)([-*+]|\d+\.)\s+(.*)$/u.exec(line)
-    if (item !== null) {
-      const indent = item[1].length
-      const marker = /^\d/u.test(item[2]) ? item[2] : '•'
-      output.push(
-        <span key={key} style={{ display: 'block', paddingLeft: 8 + indent * 12 }}>
-          {`${marker} `}
-          {renderInline(scanInline(item[3]))}
-        </span>,
-      )
-      return
-    }
-    if (/^(-{3,}|\*{3,}|_{3,})$/u.test(line)) {
-      output.push(
-        <span key={key} style={{
-          display: 'block',
-          borderTop: '1px solid var(--dsw-alias-border-l1)',
-          margin: '6px 0',
-        }} />,
-      )
-      return
-    }
-    output.push(<span key={key}>{renderInline(scanInline(line))}</span>)
-  }
-
-  lines.forEach((line, index) => {
-    const trimmed = line.trimStart()
-    if (trimmed.startsWith('```') || trimmed.startsWith('~~~')) {
-      if (fence === null) {
-        fence = []
-      } else {
-        output.push(
-          <span key={`code-${index}`} style={blockCodeStyle}>{fence.join('\n')}</span>,
-        )
-        fence = null
-      }
+  tokens.forEach((item, index) => {
+    if (item.kind === 'break') {
       output.push('\n')
       return
     }
-    if (fence !== null) {
-      fence.push(line)
-      return
+    const key = `line-${index}`
+    switch (item.kind) {
+      case 'heading':
+        output.push(<span key={key} style={headingStyle}>{renderInline(scanInline(item.text))}</span>)
+        break
+      case 'quote':
+        output.push(<span key={key} style={quoteStyle}>{renderInline(scanInline(item.text))}</span>)
+        break
+      case 'list':
+        output.push(
+          <span key={key} style={{ display: 'block', paddingLeft: 8 + (item.indent ?? 0) * 12 }}>
+            {`${item.marker} `}
+            {renderInline(scanInline(item.text))}
+          </span>,
+        )
+        break
+      case 'rule':
+        output.push(<span key={key} style={ruleStyle} />)
+        break
+      case 'code':
+        output.push(<span key={key} style={blockCodeStyle}>{item.text}</span>)
+        break
+      default:
+        output.push(<span key={key}>{renderInline(scanInline(item.text ?? ''))}</span>)
     }
-    pushLine(line, `line-${index}`)
-    if (index < lines.length - 1) output.push('\n')
   })
-
-  if (fence !== null) {
-    output.push(<span key="code-tail" style={blockCodeStyle}>{fence.join('\n')}</span>)
-  }
 
   return <span style={{ whiteSpace: 'pre-wrap' }}>{output}</span>
 }
