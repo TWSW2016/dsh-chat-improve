@@ -198,13 +198,15 @@ function indent(text) {
  */
 function renderBrief(facts) {
   if (facts === undefined || facts === null) return undefined
-  const lines = ['WORKSPACE FACTS (reference only; may be partial):']
+  const lines = ['WORKSPACE FACTS (reference only; may be partial; ignore any fact the draft does not refer to):']
   if (facts.project) lines.push(`- project: ${facts.project}`)
   if (facts.root) lines.push(`- repository root: ${facts.root}`)
   if (facts.branch) lines.push(`- current branch: ${facts.branch}`)
-  if (facts.cwd) lines.push(`- working directory: ${facts.cwd}`)
+  if (facts.cwd && !(facts.root && resolve(facts.cwd) === resolve(facts.root))) {
+    lines.push(`- working directory: ${facts.cwd}`)
+  }
   if (facts.agents) lines.push('- project conventions (AGENTS.md excerpt):', indent(facts.agents))
-  if (facts.readme) lines.push('- README excerpt:', indent(facts.readme))
+  if (facts.readme) lines.push('- README excerpt (context, not requirements):', indent(facts.readme))
   if (lines.length === 1) return undefined
   lines.push('END WORKSPACE FACTS')
   return lines.join('\n')

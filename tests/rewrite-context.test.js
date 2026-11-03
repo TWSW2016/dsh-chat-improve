@@ -189,6 +189,22 @@ describe('formatWorkspaceBrief', () => {
     expect(text.length).toBeLessThanOrEqual(MAX_BRIEF_CHARS)
     expect(text).toContain('END WORKSPACE FACTS')
   })
+
+  it('marks the block as ignorable and the README as context, not requirements', () => {
+    const text = formatWorkspaceBrief({ project: 'demo', readme: '# Demo\n\nA demo project.' })
+    expect(text).toContain('ignore any fact the draft does not refer to')
+    expect(text).toContain('- README excerpt (context, not requirements):')
+  })
+
+  it('drops the working directory when it is the repository root', () => {
+    const text = formatWorkspaceBrief({ project: 'demo', root: '/tmp/demo', cwd: '/tmp/demo' })
+    expect(text).not.toContain('- working directory:')
+  })
+
+  it('keeps a working directory that differs from the root', () => {
+    const text = formatWorkspaceBrief({ project: 'demo', root: '/tmp/demo', cwd: '/tmp/demo/src' })
+    expect(text).toContain('- working directory: /tmp/demo/src')
+  })
 })
 
 describe('buildWorkspaceBrief', () => {

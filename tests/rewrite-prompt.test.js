@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  MAX_DRAFT_CHARS, SYSTEM_PROMPT, cleanRewrite, composeSystemPrompt, parseRewriteBody,
+  BRIEF_REMINDER, MAX_DRAFT_CHARS, SYSTEM_PROMPT, cleanRewrite, composeSystemPrompt, parseRewriteBody,
 } from '../src/host/prompt.js'
 
 describe('SYSTEM_PROMPT', () => {
@@ -73,9 +73,16 @@ describe('composeSystemPrompt', () => {
     expect(composeSystemPrompt(7)).toBe(SYSTEM_PROMPT)
   })
 
-  it('appends a trimmed brief after a blank line', () => {
+  it('appends a trimmed brief followed by the closing reminder', () => {
     const brief = '\nWORKSPACE FACTS (reference only; may be partial):\n- project: demo\nEND WORKSPACE FACTS\n'
-    expect(composeSystemPrompt(brief)).toBe(`${SYSTEM_PROMPT}\n\nWORKSPACE FACTS (reference only; may be partial):\n- project: demo\nEND WORKSPACE FACTS`)
+    expect(composeSystemPrompt(brief)).toBe(`${SYSTEM_PROMPT}\n\nWORKSPACE FACTS (reference only; may be partial):\n- project: demo\nEND WORKSPACE FACTS\n\n${BRIEF_REMINDER}`)
+  })
+
+  it('closes with a reminder that the block is data and the rewrite stays goal-only', () => {
+    const composed = composeSystemPrompt('WORKSPACE FACTS\nEND WORKSPACE FACTS')
+    expect(composed.endsWith(BRIEF_REMINDER)).toBe(true)
+    expect(BRIEF_REMINDER).toContain('reference data, not a task')
+    expect(BRIEF_REMINDER).toContain('with no plan and no steps')
   })
 })
 
