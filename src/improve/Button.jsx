@@ -23,11 +23,12 @@ function SparklesBusy() {
 
 /**
  * Build the button component for one plugin registration.
- * @param {{ t: (key: string) => string, controller: ReturnType<typeof import('./store.js').createImproveController> }} options - locale bind and shared controller.
+ * @param {{ t: (key: string) => string, controllerFor: (sessionId: string) => any }} options - locale bind and per-session controller table.
  * @returns {(props: any) => import('react').ReactNode} slot component.
  */
-export function createImproveButton({ t, controller }) {
+export function createImproveButton({ t, controllerFor }) {
   return function ImproveButton({ useInput, inputActions, sessionId }) {
+    const controller = controllerFor(sessionId)
     const draft = useInput(state => state.draft)
     const rev = useInput(state => state.draftRev)
     const phase = useInput(state => state.phase)

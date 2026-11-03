@@ -1,14 +1,14 @@
 /**
  * Registration for "Improve by AI": one tool-row button and one notice seat.
  *
- * Both slots are session-scoped and carry `useInput`/`inputActions`; the shared
- * controller is created here so the two entries see one state, and the whole
- * registration is one disposer.
+ * Both slots are session-scoped and carry `useInput`/`inputActions`. Each
+ * session gets its own controller so a rewritten draft in one session never
+ * shows its notice, or its restore target, in another.
  */
 import { createImproveButton } from './Button.jsx'
 import { createImproveNotice } from './Notice.jsx'
+import { createImproveControllers } from './registry.js'
 import { createRewriteRequest } from './request.js'
-import { createImproveController } from './store.js'
 import { ensureImproveStyles } from './styles.js'
 
 /**
@@ -18,9 +18,10 @@ import { ensureImproveStyles } from './styles.js'
  * @returns {() => void} disposer removing both slots, the stylesheet, and in-flight work.
  */
 export function registerImprove(ctx, t) {
-  const controller = createImproveController({ request: createRewriteRequest() })
-  const Button = createImproveButton({ t, controller })
-  const Notice = createImproveNotice({ t, controller })
+  const controllers = createImproveControllers({ request: createRewriteRequest() })
+  const controllerFor = sessionId => controllers.for(sessionId)
+  const Button = createImproveButton({ t, controllerFor })
+  const Notice = createImproveNotice({ t, controllerFor })
   const removeStyles = ensureImproveStyles()
 
   const offButton = ctx.slots.inject('conversation.input.right', () => ctx.slots.register({
@@ -38,7 +39,7 @@ export function registerImprove(ctx, t) {
   return () => {
     offNotice()
     offButton()
-    controller.dispose()
+    controllers.dispose()
     removeStyles()
   }
 }

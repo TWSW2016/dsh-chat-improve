@@ -7,11 +7,12 @@ const DISMISS_MS = 8000
 
 /**
  * Build the dock notice component for one plugin registration.
- * @param {{ t: (key: string) => string, controller: ReturnType<typeof import('./store.js').createImproveController> }} options - locale bind and shared controller.
+ * @param {{ t: (key: string) => string, controllerFor: (sessionId: string) => any }} options - locale bind and per-session controller table.
  * @returns {(props: any) => import('react').ReactNode} slot component.
  */
-export function createImproveNotice({ t, controller }) {
+export function createImproveNotice({ t, controllerFor }) {
   return function ImproveNotice({ sessionId, useInput }) {
+    const controller = controllerFor(sessionId)
     const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot)
     const draft = useInput(input => input.draft)
     const phase = useInput(input => input.phase)
