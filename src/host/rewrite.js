@@ -7,9 +7,10 @@
  * is one-shot: no tools, no session events, no history. Nothing here logs or
  * echoes the draft; responses carry only the rewrite and its route.
  */
+import { buildWorkspaceBrief } from './context.js'
 import {
-  MAX_BODY_BYTES, MAX_DRAFT_CHARS, MAX_OUTPUT_TOKENS, SYSTEM_PROMPT, TEMPERATURE,
-  cleanRewrite, parseRewriteBody,
+  MAX_BODY_BYTES, MAX_DRAFT_CHARS, MAX_OUTPUT_TOKENS, TEMPERATURE,
+  cleanRewrite, composeSystemPrompt, parseRewriteBody,
 } from './prompt.js'
 
 /** Exact route path registered on the web server. */
@@ -85,16 +86,17 @@ function resolveModel(ctx, sessionId) {
  * @param {{ stream: (options: object) => AsyncIterable<any> }} llm - the model service.
  * @param {{ provider: string, model: string }} route - resolved model.
  * @param {string} draft - the draft to rewrite.
+ * @param {string | undefined} brief - bounded workspace facts, or undefined.
  * @param {AbortSignal} signal - caller cancellation.
  * @returns {Promise<{ text: string, finish: any }>} concatenated text and the finish reason.
  */
-async function streamRewrite(llm, route, draft, signal) {
+async function streamRewrite(llm, route, draft, brief, signal) {
   let text = ''
   let finish
   const chunks = llm.stream({
     provider: route.provider,
     model: route.model,
-    system: SYSTEM_PROMPT,
+    system: composeSystemPrompt(brief),
     messages: [{ role: 'user', content: [{ type: 'text', text: draft }] }],
     maxTokens: MAX_OUTPUT_TOKENS,
     temperature: TEMPERATURE,
@@ -170,11 +172,12 @@ export async function handleRewrite(ctx, req, res) {
     sendJson(res, 409, { code: 'no-model', message: 'no model selected for this session' })
     return
   }
+  const brief = await buildWorkspaceBrief(ctx, parsed.sessionId)
   const controller = new AbortController()
   res.on('close', () => { controller.abort() })
   let outcome
   try {
-    outcome = await streamRewrite(llm, route, parsed.draft, controller.signal)
+    outcome = await streamRewrite(llm, route, parsed.draft, brief, controller.signal)
   } catch (error) {
     sendJson(res, 502, { code: 'llm-error', message: error instanceof Error ? error.message : 'rewrite failed' })
     return

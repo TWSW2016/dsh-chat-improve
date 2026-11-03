@@ -1,5 +1,15 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { REWRITE_PATH, handleRewrite } from '../src/host/rewrite.js'
+
+const temporaryDirectories = []
+
+afterEach(async () => {
+  const pending = temporaryDirectories.splice(0)
+  await Promise.all(pending.map(directory => rm(directory, { recursive: true, force: true })))
+})
 
 /**
  * Build a request stand-in as an async iterable of body chunks.
@@ -163,6 +173,40 @@ describe('handleRewrite', () => {
     expect(JSON.parse(res.body).model).toEqual({ provider: 'default-p', model: 'default-m' })
   })
 
+  it('adds workspace facts to the system prompt without changing the user message', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-rewrite-route-'))
+    temporaryDirectories.push(root)
+    await mkdir(join(root, '.git'), { recursive: true })
+    await writeFile(join(root, '.git', 'HEAD'), 'ref: refs/heads/main\n')
+    await writeFile(join(root, 'package.json'), JSON.stringify({ name: 'demo' }))
+    const session = {
+      header: { cwd: root },
+      requestHeader: () => ({ config: { provider: 'p', model: 'm' } }),
+    }
+    const res = fakeResponse()
+    const seen = []
+    const ctx = fakeContext({
+      connection: reachable.connection,
+      llm: {
+        stream: (options) => {
+          seen.push(options)
+          return (async function* generate() {
+            yield { type: 'text-delta', index: 0, text: 'better' }
+            yield { type: 'finish', reason: { kind: 'stop' } }
+          })()
+        },
+      },
+      sessions: { get: () => session },
+      agents: { get: () => ({ session }) },
+      workingDirectory: { get: () => root },
+    })
+    await handleRewrite(ctx, fakeRequest({ draft: 'fix this', sessionId: 'session-1' }), res)
+    expect(res.statusCode).toBe(200)
+    expect(seen[0].system).toContain('- project: demo')
+    expect(seen[0].system).toContain('- current branch: main')
+    expect(seen[0].messages).toEqual([{ role: 'user', content: [{ type: 'text', text: 'fix this' }] }])
+  })
+
   it('sends the draft verbatim as the only user message, with no tools', async () => {
     const res = fakeResponse()
     const seen = []
@@ -181,6 +225,7 @@ describe('handleRewrite', () => {
     })
     await handleRewrite(ctx, fakeRequest({ draft: '修复 这个 图' }), res)
     expect(seen[0].messages).toEqual([{ role: 'user', content: [{ type: 'text', text: '修复 这个 图' }] }])
+    expect(seen[0].system).not.toContain('- project:')
     expect(seen[0].tools).toBeUndefined()
     expect(seen[0].sessionId).toBeUndefined()
   })
