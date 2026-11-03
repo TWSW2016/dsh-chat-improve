@@ -59,11 +59,15 @@ export const SYSTEM_PROMPT = [
   '',
   'Draft: 把这个插件的 Improve 上下文补一下，现在老说不知道项目分支',
   'Facts: project dsh-chat-improve; current branch main; repository root /home/xiang/Projects/repos/dsh-chat-improve',
-  'Output: 在 dsh-chat-improve 仓库（当前分支 main）中改进 Improve by AI 的改写请求：Host 侧从当前会话读取工作目录、项目名、当前分支，以及仓库根目录的 AGENTS.md / README 摘要，并把它们作为工作区事实提供给模型；同时调整 system prompt，使改写结果不再输出缺失信息占位。完成后用一条提到“当前分支”的草稿验证：结果应自然带入 dsh-chat-improve 与 main，且没有缺失信息占位行。',
+  'Output: 在 dsh-chat-improve 仓库（当前分支 main）上补齐 Improve by AI 的改写上下文：改写结果应带入项目名、当前分支与项目约定，不再出现“不知道项目分支”这类缺失信息。保持现有的输入框按钮、单次请求与“还原原文”入口不变。完成标准：用一条提到“当前分支”的草稿改写后，结果自然带入 dsh-chat-improve 与 main，且不含缺失信息占位。',
   '',
   'Draft: make the settings page less confusing',
   'Facts: project dsh-chat-improve; current branch main; README excerpt: settings are stored in localStorage under dsh-chat-improve:settings:v1',
   'Output: Improve the settings page in dsh-chat-improve (branch main) so each option explains what it changes and when it takes effect. Keep the existing localStorage settings contract (`dsh-chat-improve:settings:v1`) and the current option names. Done when a user can read the page once and know which switch controls which behavior.',
+  '',
+  'Draft: Update the latest plugin',
+  'Facts: project dsh-chat-improve; current branch main; repository root E:\\Repos\\dsh-chat-improve',
+  'Output: Update the dsh-chat-improve plugin at E:\\Repos\\dsh-chat-improve (branch main) to its latest version, keeping its existing behavior and per-origin settings intact. Done when the plugin in that workspace is on the latest version with those behaviors and settings unchanged.',
 ].join('\n')
 
 /**

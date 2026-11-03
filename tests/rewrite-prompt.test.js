@@ -53,8 +53,16 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toContain('never as the procedure that')
   })
 
-  it('carries two examples', () => {
-    expect(SYSTEM_PROMPT.match(/^Draft:/gmu)).toHaveLength(2)
+  it('carries three examples, each with a completion criterion', () => {
+    expect(SYSTEM_PROMPT.match(/^Draft:/gmu)).toHaveLength(3)
+    expect(SYSTEM_PROMPT.match(/Done when|完成标准/gu)).toHaveLength(3)
+  })
+
+  it('shows a rewrite that stops at the goal instead of designing the solution', () => {
+    expect(SYSTEM_PROMPT).not.toContain('Host 侧从当前会话读取')
+    expect(SYSTEM_PROMPT).not.toContain('同时调整 system prompt')
+    expect(SYSTEM_PROMPT).toContain('Draft: Update the latest plugin')
+    expect(SYSTEM_PROMPT).toContain('Done when the plugin in that workspace is on the latest version')
   })
 })
 
