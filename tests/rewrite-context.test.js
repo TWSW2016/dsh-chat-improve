@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 import {
   MAX_AGENTS_CHARS, MAX_BRIEF_CHARS, MAX_README_CHARS,
   buildWorkspaceBrief, collectWorkspaceBrief, formatWorkspaceBrief, resolveSessionDirectory,
@@ -98,7 +98,7 @@ describe('collectWorkspaceBrief', () => {
     await mkdir(join(root, '.git'))
     await writeFile(join(root, '.git', 'HEAD'), 'ref: refs/heads/main\n')
     const facts = await collectWorkspaceBrief(root)
-    expect(facts.project).toBe(root.split('/').at(-1))
+    expect(facts.project).toBe(basename(root))
     expect(facts.branch).toBe('main')
   })
 
@@ -144,7 +144,7 @@ describe('collectWorkspaceBrief', () => {
       readFile: async () => { throw new Error('denied') },
       stat: async () => { throw new Error('denied') },
     })
-    expect(facts.project).toBe(root.split('/').at(-1))
+    expect(facts.project).toBe(basename(root))
     expect(facts.branch).toBeUndefined()
     expect(facts.agents).toBeUndefined()
     expect(facts.readme).toBeUndefined()
