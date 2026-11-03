@@ -52,8 +52,11 @@ git_branch: "main"
 | Improve by AI 工作区上下文 | 通过：真实路由与真实 GUI 输出均带入 `dsh-chat-improve` 与 `main`，不含 unknown/待确认/TBD | `.research/verify-step4/real-improve-output.txt` |
 | Improve by AI 约束保留 | 通过：草稿“只改 host，不要动 UI；改完告诉我”在结果中保留 | 本会话真实路由输出（2026-11-03T20:26） |
 | Improve by AI 英文草稿 | 通过：英文草稿自然带入 branch main，无 Project/Branch 头部 | 本会话真实路由输出（2026-11-03T20:26） |
+| Improve by AI 无计划/无步骤 | 未覆盖：指令、few-shot 与简报已改为只写目标、约束与完成判据；真实模型抽样待宿主重载后执行 | 本会话单测（2026-11-03T23:25，157 例） |
 
 本轮新增的 Improve 行来自 2026-11-03T20:26–20:28 的真实路由与 GUI 验收；GUI 脚本见 [verify-improve.mjs:1-166](../scripts/verify-improve.mjs#L1-L166)，产物在 `.research/verify-step4/`，未提交。〔来源：无链接：本会话真实路由与 GUI 验收；定位：`real-improve-output.txt`、`improve-report.redacted.json`、`real-improve-ready.png`；原因：验证产物未提交〕
+
+2026-11-03T23:22–23:26 起改写契约调整为"只写目标、对象、约束与末态判据，不写计划、方案与操作步骤"。改动落在 [prompt.js:27-89](../src/host/prompt.js#L27-L89)（规则 2/3、开头框架、三条 few-shot、`BRIEF_REMINDER`）与 [context.js:199-213](../src/host/context.js#L199-L213)（简报头、README 标签、cwd 去重）；单测覆盖新契约，真实模型抽样记入上表"未覆盖"行，待宿主重载后补。〔来源：无链接：本会话实现与单测；定位：2026-11-03T23:25 的 `npm test`，退出码 0；原因：终端输出无可分享链接〕
 
 ## 限制
 
