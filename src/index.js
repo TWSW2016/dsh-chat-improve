@@ -1,13 +1,16 @@
 /**
  * Host half of dsh-chat-improve.
  *
- * The plugin is presentation-only: the browser half owns every visible
- * surface, and the Host half exists so the bundle has a Loader row and a
- * place for the plugin Config (step 1). No tool, prompt, or session event is
- * contributed.
+ * The browser half owns every visible surface. This half exists for two
+ * reasons: the bundle needs a Loader row, and "Improve by AI" needs a model
+ * call, which only the Host can make. The route is registered behind the
+ * composition's trust fence and writes nothing to the session.
  */
+import { registerRewriteRoute } from './host/rewrite.js'
 
-/** @param {import('@deepseek-ai/cordis').Context} _ctx */
-export function apply(_ctx) {
-  // Intentionally empty until the settings Config lands.
+/** @param {import('@deepseek-ai/cordis').Context} ctx */
+export function apply(ctx) {
+  ctx.inject(['webServer', 'connection'], (scope) => {
+    scope.effect(() => registerRewriteRoute(scope), 'dsh-chat-improve: POST /chat-improve/rewrite')
+  })
 }
