@@ -18,13 +18,14 @@ export const DEFAULT_SETTINGS = Object.freeze({
   composerLivePreview: true,
   mermaid: true,
   userMessageMarkdown: true,
+  improvePrompt: true,
   mermaidMaxSourceChars: 20000,
 })
 
 /**
  * Coerce an unknown stored value into a complete, in-range settings object.
  * @param {unknown} input - parsed storage value.
- * @returns {{ composerLivePreview: boolean, mermaid: boolean, userMessageMarkdown: boolean, mermaidMaxSourceChars: number }}
+ * @returns {{ composerLivePreview: boolean, mermaid: boolean, userMessageMarkdown: boolean, improvePrompt: boolean, mermaidMaxSourceChars: number }}
  */
 export function sanitizeSettings(input) {
   const raw = input !== null && typeof input === 'object' ? input : {}
@@ -35,6 +36,7 @@ export function sanitizeSettings(input) {
     userMessageMarkdown: typeof raw.userMessageMarkdown === 'boolean'
       ? raw.userMessageMarkdown
       : DEFAULT_SETTINGS.userMessageMarkdown,
+    improvePrompt: typeof raw.improvePrompt === 'boolean' ? raw.improvePrompt : DEFAULT_SETTINGS.improvePrompt,
     mermaidMaxSourceChars: Number.isFinite(max)
       ? Math.min(MERMAID_SOURCE_LIMITS.max, Math.max(MERMAID_SOURCE_LIMITS.min, Math.round(max)))
       : DEFAULT_SETTINGS.mermaidMaxSourceChars,

@@ -29,6 +29,7 @@ describe('sanitizeSettings', () => {
       composerLivePreview: false,
       mermaid: false,
       userMessageMarkdown: false,
+      improvePrompt: true,
       mermaidMaxSourceChars: MERMAID_SOURCE_LIMITS.min,
     })
     expect(sanitizeSettings({ mermaidMaxSourceChars: 10_000_000 }).mermaidMaxSourceChars)

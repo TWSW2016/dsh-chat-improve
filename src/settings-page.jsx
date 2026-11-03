@@ -56,6 +56,15 @@ export function SettingsPage({ t }) {
       </div>
 
       <div style={row}>
+        <Checkbox
+          checked={settings.improvePrompt}
+          onChange={value => settingsStore.update({ improvePrompt: value })}
+          label={t('settings.improvePrompt')}
+        />
+        <div style={hint}>{t('settings.improvePromptHint')}</div>
+      </div>
+
+      <div style={row}>
         <label style={label} htmlFor="dsh-chat-improve-mermaid-max">{t('settings.maxSource')}</label>
         <input
           id="dsh-chat-improve-mermaid-max"
