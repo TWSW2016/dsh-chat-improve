@@ -7,9 +7,10 @@ DSH chat presentation plugin. Target: DeepSeek Harness `>= 0.2.1-rc.5`, Desktop 
 - **Composer live inline rendering** — inline code, bold/italic/strikethrough, links, headings, and list markers are rendered inside the real composer while it stays editable; the caret line keeps its source.
 - **Mermaid in the transcript** — fenced `mermaid` blocks render as SVG with the DSH theme, a source/diagram toggle, and a source fallback on errors. Diagrams wider than the column get an Actual size / Fit width toggle.
 - **User-message Markdown** — sent messages render lists, headings, quotes, rules, and code blocks; block lines do not add an extra blank line, and CRLF input keeps a single line break.
+- **Improve by AI** — a composer button sends the current draft to the session's model in one tool-free request and replaces it with a clearer prompt: explicit action and object, the details the draft implies, a completion criterion, and every original constraint kept. A restore entry appears for a few seconds. This is the plugin's only model call, and it writes nothing to the session.
 - Every feature has a setting, stored per browser origin, and can be switched off.
 
-Not in scope: images (already native), raw HTML, LaTeX in the composer, tables/code-block cards in the composer, in-place edit-and-resend (future DSH core capability).
+Not in scope: images (already native), raw HTML, LaTeX in the composer, tables/code-block cards in the composer, in-place edit-and-resend (future DSH core capability), streaming rewrites, and keeping `@` references or slash commands through a rewrite.
 
 ## Usage
 
@@ -18,6 +19,7 @@ Open **Settings → 聊天增强 (Chat Improve)**:
 - Render Markdown inside the composer — on by default. The line containing the caret shows source; click a rendered run to reveal it; blur re-renders the whole draft.
 - Render Mermaid diagrams — on by default. Each diagram has a Source/Diagram toggle; invalid diagrams keep their source and offer Retry.
 - Render user messages as Markdown — on by default; copy and edit still use the original text.
+- Improve by AI — on by default. Sends the draft to the current session model and replaces the composer text; the notice above the composer offers 还原原文 / Restore original for a few seconds.
 - Mermaid source limit — blocks longer than the limit stay as code.
 
 Settings are stored in `localStorage` under `dsh-chat-improve:settings:v1`; Desktop and the Web GUI keep separate copies.
@@ -25,10 +27,12 @@ Settings are stored in `localStorage` under `dsh-chat-improve:settings:v1`; Desk
 ## Layout
 
 ```text
-src/index.js          Host row (presentation-only)
+src/index.js          Host row: the rewrite route behind the connection trust fence
+src/host/             Prompt text, body validation, output cleanup, route handler
 src/client.js         Browser entry: slots, observers, settings
 src/settings.js       localStorage-backed settings store
 src/composer/         Lexical run formatting for the composer
+src/improve/          Improve by AI: controller, transport, button, notice
 src/mermaid/          transcript detector, engine, enhancer
 src/user-text/        user-message inline Markdown renderer
 scripts/build.mjs     esbuild -> window.__ModuleLoader__.load factory
@@ -60,4 +64,10 @@ Install the directory as a profile bundle with `plugin_manager install_bundle`, 
 - Mermaid's timeline grammar cannot parse a period containing a colon (`2026-11-01 16:19`); the error panel explains the workaround.
 - Wide diagrams keep their natural size only after the Actual size toggle; the default is still fit-to-column.
 - The browser bundle is ~3.4 MiB because the Mermaid engine is included; the engine itself initializes on first diagram.
-- No core changes, no session writes, no model-visible input.
+- Improve by AI sends the draft to the model provider configured for the session. The draft is not written to the session log, not stored in localStorage, and not logged; turning the setting off registers neither slot, so no request can happen.
+- A rewrite replaces the whole draft, so `@` references and slash commands are cleared. When the draft contains one, the button asks first instead of silently dropping it.
+- Only one level of restore exists, and only while the draft still equals the rewritten text; the notice clears itself after about 8 seconds.
+- There is no streaming: the button spins until the model finishes (90-second deadline), then the draft is replaced once.
+- A rewrite needs a session model or a deployment default; with neither, the notice says the model is missing and no request is made.
+- The rewrite is stateless by design: it sees the draft only — not the conversation, not the workspace, not the selected text.
+- No core changes, no session writes; the one model call is not part of the conversation log.

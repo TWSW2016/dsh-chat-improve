@@ -1,7 +1,7 @@
 ---
 title: "dsh-chat-improve 验收记录"
 created: 2026-11-01
-updated: 2026-11-02
+updated: 2026-11-03
 log_deai_profile: "agent"
 log_deai_version: "0.1.4"
 tags: ["log-deai", "project/dsh-chat-improve", "type/progress", "topic/dsh-plugin"]
@@ -41,6 +41,11 @@ git_branch: "fix/user-message-extra-newline"
 | 卸载残留 | 通过：移除后 `settings.section` 无 `chat-improve`，`conversation.user.text.node` 只剩内置 `text`；插件卸载无残留 | 本次会话的 Slots 查询 |
 | 重装 | 通过：`application: applied`，设置页与用户消息渲染器恢复 | 本次会话的 Slots 查询 |
 | Desktop 窗口 | 未做 DOM 断言；加载同一份 `lib/client.js` | — |
+| Improve by AI 按钮 | 待验收：步骤 6 部署后跑 `scripts/verify-improve.mjs` | — |
+| Improve by AI 改写与还原 | 待验收：同上，`improve-ready.png` | — |
+| Improve by AI 失败回退 | 待验收：同上，`improve-error.png` | — |
+| Improve by AI 引用闸门 | 待验收：同上，`improve-confirm.png` | — |
+| Improve by AI 开关 | 待验收：同上，`improve-report.json` 的 `settingsOff` | — |
 
 ## 限制
 
@@ -48,6 +53,8 @@ git_branch: "fix/user-message-extra-newline"
 - 一次性粘贴的多行文本若落在单个文本节点内，可能保持原文；逐行输入与 Shift+Enter 分行正常。〔来源：无链接：验证观察；定位：`verify-perf.mjs` 的单节点 14k 草稿；原因：验证产物未提交〕
 - 用户消息里真实存在的空行会保留，渲染器不折叠有意空行；CRLF 只算一次换行，孤立 `\r` 按 `pre-wrap` 的浏览器行为忽略。〔来源：[plan.js:17-18](../src/user-text/plan.js#L17-L18)〕
 - Desktop 窗口没有独立断言；Web GUI 与 Desktop 共用同一 bundle。〔来源：无链接：验证缺口；定位：本文件“结果”表；原因：会话无可分享链接〕
+- Improve by AI 会把草稿发送给会话所用的模型 provider；草稿不进会话日志、不进 localStorage、不进日志，关掉开关即两个槽都不注册。〔来源：[rewrite.js:1-9](../src/host/rewrite.js#L1-L9)、[client.js](../src/client.js)〕
+- 改写是整体替换：`@` 引用与斜杠命令会被清空，含引用时先弹确认；还原只留一层，且仅在草稿仍等于改写结果时可用，提示条约 8 秒后消失。〔来源：[store.js](../src/improve/store.js)、[Notice.jsx](../src/improve/Notice.jsx)〕
 
 ## 来源
 
@@ -55,6 +62,8 @@ git_branch: "fix/user-message-extra-newline"
 - [verify-user-newline.mjs:86-105](../scripts/verify-user-newline.mjs#L86-L105)：用户消息块后换行检查与 86px/130px 判定。
 - [plan.js:17-18](../src/user-text/plan.js#L17-L18)：CRLF 与孤立 CR 的归一化。
 - [format.js:33-95](../src/composer/format.js#L33-L95)：输入框能力边界。
+- [rewrite.js:1-9](../src/host/rewrite.js#L1-L9)：改写路由的信任栅栏、单次模型调用与“不写会话”约束。
+- [verify-improve.mjs:1-166](../scripts/verify-improve.mjs#L1-L166)：Improve by AI 的真实 GUI 验收脚本（默认拦截路由，`DSH_VERIFY_REAL=1` 打真模型）。
 - 无链接：用户决策；定位：2026-11-01 本会话；原因：会话无可分享链接。
 - 无链接：验证环境；定位：`http://127.0.0.1:3099` 与 `.research/verify/`；原因：验证产物未提交。
 - 无链接：本次浏览器验证；定位：`.research/verify/user-newline-verify.json`、`user-newline-verify.png`；用途：用户消息空行结果；原因：`.research/` 未提交。

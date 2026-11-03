@@ -2,7 +2,7 @@
   "name": "dsh-chat-improve",
   "version": "0.1.0",
   "private": true,
-  "description": "DSH chat presentation improvements: live inline Markdown in the composer, Mermaid diagrams and rendered user messages in the transcript.",
+  "description": "DSH chat presentation improvements: live inline Markdown in the composer, Mermaid diagrams and rendered user messages in the transcript, and a one-click model rewrite of the draft.",
   "type": "module",
   "exports": {
     ".": "./src/index.js",
