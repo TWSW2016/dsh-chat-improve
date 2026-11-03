@@ -15,6 +15,7 @@ git_branch: "fix/user-message-extra-newline"
 - 目标版本 `0.2.1-rc.5`，Desktop 与本机 Web GUI。〔来源：无链接：用户决策；定位：2026-11-01 本会话；原因：会话无可分享链接〕
 - 真实浏览器验证使用 `web` profile、`http://127.0.0.1:3099`、已安装 Google Chrome（headless，Playwright `playwright-core`）。〔来源：无链接：验证环境；定位：本轮 `scripts/verify-*.mjs`；原因：验证产物在 `.research` 内，未提交〕
 - 验证脚本随仓库提交在 `scripts/verify-*.mjs`；截图与 JSON 结果保存在 `.research/verify/`，不进版本库。〔来源：[verify-web.mjs:1-145](../scripts/verify-web.mjs#L1-L145)〕
+- Improve by AI 的部署形态：desktop profile 以 `link:E:/Repos/dsh-chat-improve` 挂载，`dsh.profile.bundles` 含该包；2026-11-03 通过 `plugin_manager set_plugin` 关→开该行（entryId `include:dsh-chat-improve`）完成 Host 半重载，`application: applied`、无 warning。〔来源：无链接：本机会话；定位：`.dsh/profiles/desktop/package.json` 与 `plugin_manager` 返回值；原因：运行时数据无文件〕
 
 ## 结果
 
@@ -41,11 +42,13 @@ git_branch: "fix/user-message-extra-newline"
 | 卸载残留 | 通过：移除后 `settings.section` 无 `chat-improve`，`conversation.user.text.node` 只剩内置 `text`；插件卸载无残留 | 本次会话的 Slots 查询 |
 | 重装 | 通过：`application: applied`，设置页与用户消息渲染器恢复 | 本次会话的 Slots 查询 |
 | Desktop 窗口 | 未做 DOM 断言；加载同一份 `lib/client.js` | — |
-| Improve by AI 按钮 | 待验收：步骤 6 部署后跑 `scripts/verify-improve.mjs` | — |
-| Improve by AI 改写与还原 | 待验收：同上，`improve-ready.png` | — |
-| Improve by AI 失败回退 | 待验收：同上，`improve-error.png` | — |
-| Improve by AI 引用闸门 | 待验收：同上，`improve-confirm.png` | — |
-| Improve by AI 开关 | 待验收：同上，`improve-report.json` 的 `settingsOff` | — |
+| Improve by AI 按钮注册 | 通过：`conversation.input.right` 出现 `chat-improve.improve`，order 10，active | 本会话 Slots 查询（2026-11-03T09:03） |
+| Improve by AI 提示条注册 | 通过：`conversation.input.dock` 出现 `chat-improve.improve-notice`，order 30，排在 todo/goal/queue 之后 | 本会话 Slots 查询（2026-11-03T09:03） |
+| Improve by AI 路由与栅栏 | 通过：无凭证 `POST /chat-improve/rewrite` → 401；同 method 的未知路径 → 405，说明路由已注册且先走信任栅栏 | `curl.exe` 探测（2026-11-03T09:03） |
+| Improve by AI 改写与还原 | 待交互验收：需要带 token 的 `DSH_VERIFY_URL` 或用户手点 | `scripts/verify-improve.mjs` |
+| Improve by AI 失败回退 | 待交互验收：同上 | `scripts/verify-improve.mjs` |
+| Improve by AI 引用闸门 | 待交互验收：同上 | `scripts/verify-improve.mjs` |
+| Improve by AI 开关 | 待交互验收：同上 | `scripts/verify-improve.mjs` |
 
 ## 限制
 
