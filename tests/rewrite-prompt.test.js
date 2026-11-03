@@ -39,6 +39,20 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toContain('run the tests')
   })
 
+  it('leaves the plan, the approach and the operations to the executing agent', () => {
+    expect(SYSTEM_PROMPT).toContain('never plan it')
+    expect(SYSTEM_PROMPT).toContain('states what to achieve, never how to achieve it')
+    expect(SYSTEM_PROMPT).toContain('plan, an approach, an ordered sequence of steps')
+    expect(SYSTEM_PROMPT).toContain('agent that receives the prompt decides those')
+    expect(SYSTEM_PROMPT).not.toContain('investigation or verification steps')
+    expect(SYSTEM_PROMPT).not.toContain('or process detail')
+  })
+
+  it('states what done means as an end state rather than a procedure', () => {
+    expect(SYSTEM_PROMPT).toContain('as an end state of the request itself')
+    expect(SYSTEM_PROMPT).toContain('never as the procedure that')
+  })
+
   it('carries two examples', () => {
     expect(SYSTEM_PROMPT.match(/^Draft:/gmu)).toHaveLength(2)
   })
