@@ -3,9 +3,9 @@ title: "dsh-chat-improve 验收记录"
 created: 2026-11-01
 updated: 2026-11-03
 log_deai_profile: "agent"
-log_deai_version: "0.1.4"
+log_deai_version: "1.0.0-rc.1"
 tags: ["log-deai", "project/dsh-chat-improve", "type/progress", "topic/dsh-plugin"]
-git_branch: "fix/user-message-extra-newline"
+git_branch: "main"
 ---
 
 # dsh-chat-improve 验收记录
@@ -13,7 +13,7 @@ git_branch: "fix/user-message-extra-newline"
 ## 环境
 
 - 目标版本 `0.2.1-rc.5`，Desktop 与本机 Web GUI。〔来源：无链接：用户决策；定位：2026-11-01 本会话；原因：会话无可分享链接〕
-- 真实浏览器验证使用 `web` profile、`http://127.0.0.1:3099`、已安装 Google Chrome（headless，Playwright `playwright-core`）。〔来源：无链接：验证环境；定位：本轮 `scripts/verify-*.mjs`；原因：验证产物在 `.research` 内，未提交〕
+- 早期真实浏览器验证使用 `web` profile 与 `http://127.0.0.1:3099`；2026-11-03 的 Improve 上下文验收使用 `http://127.0.0.1:3080`、`/usr/bin/google-chrome`（headless，Playwright `playwright-core`），token 化 URL 不写入本文件。〔来源：无链接：验证环境；定位：本轮 `scripts/verify-*.mjs`；原因：验证产物在 `.research` 内，未提交〕
 - 验证脚本随仓库提交在 `scripts/verify-*.mjs`；截图与 JSON 结果保存在 `.research/verify/`，不进版本库。〔来源：[verify-web.mjs:1-145](../scripts/verify-web.mjs#L1-L145)〕
 - Improve by AI 的部署形态：desktop profile 以 `link:E:/Repos/dsh-chat-improve` 挂载，`dsh.profile.bundles` 含该包；2026-11-03 通过 `plugin_manager set_plugin` 关→开该行（entryId `include:dsh-chat-improve`）完成 Host 半重载，`application: applied`、无 warning。〔来源：无链接：本机会话；定位：`.dsh/profiles/desktop/package.json` 与 `plugin_manager` 返回值；原因：运行时数据无文件〕
 
@@ -45,10 +45,15 @@ git_branch: "fix/user-message-extra-newline"
 | Improve by AI 按钮注册 | 通过：`conversation.input.right` 出现 `chat-improve.improve`，order 10，active | 本会话 Slots 查询（2026-11-03T09:03） |
 | Improve by AI 提示条注册 | 通过：`conversation.input.dock` 出现 `chat-improve.improve-notice`，order 30，排在 todo/goal/queue 之后 | 本会话 Slots 查询（2026-11-03T09:03） |
 | Improve by AI 路由与栅栏 | 通过：无凭证 `POST /chat-improve/rewrite` → 401；同 method 的未知路径 → 405，说明路由已注册且先走信任栅栏 | `curl.exe` 探测（2026-11-03T09:03） |
-| Improve by AI 改写与还原 | 待交互验收：需要带 token 的 `DSH_VERIFY_URL` 或用户手点 | `scripts/verify-improve.mjs` |
-| Improve by AI 失败回退 | 待交互验收：同上 | `scripts/verify-improve.mjs` |
-| Improve by AI 引用闸门 | 待交互验收：同上 | `scripts/verify-improve.mjs` |
-| Improve by AI 开关 | 待交互验收：同上 | `scripts/verify-improve.mjs` |
+| Improve by AI 改写与还原 | 通过：真实 GUI 点击后草稿被替换，提示条显示“已改写/还原原文”；还原后回到原文 | `.research/verify-step4/improve-report.redacted.json` 与 `real-improve-ready.png` |
+| Improve by AI 失败回退 | 通过：路由拦截返回 502 时草稿不变，提示条显示“模型调用失败”与“重试” | `.research/verify-step4/improve-report.redacted.json` |
+| Improve by AI 引用闸门 | 未覆盖：当前 composer 状态下未能构造引用 chip，确认条分支未触发 | `.research/verify-step4/improve-report.redacted.json` |
+| Improve by AI 开关 | 通过：关闭后按钮数量 0；刷新后设置保持 | `.research/verify-step4/improve-report.redacted.json` |
+| Improve by AI 工作区上下文 | 通过：真实路由与真实 GUI 输出均带入 `dsh-chat-improve` 与 `main`，不含 unknown/待确认/TBD | `.research/verify-step4/real-improve-output.txt` |
+| Improve by AI 约束保留 | 通过：草稿“只改 host，不要动 UI；改完告诉我”在结果中保留 | 本会话真实路由输出（2026-11-03T20:26） |
+| Improve by AI 英文草稿 | 通过：英文草稿自然带入 branch main，无 Project/Branch 头部 | 本会话真实路由输出（2026-11-03T20:26） |
+
+本轮新增的 Improve 行来自 2026-11-03T20:26–20:28 的真实路由与 GUI 验收；GUI 脚本见 [verify-improve.mjs:1-166](../scripts/verify-improve.mjs#L1-L166)，产物在 `.research/verify-step4/`，未提交。〔来源：无链接：本会话真实路由与 GUI 验收；定位：`real-improve-output.txt`、`improve-report.redacted.json`、`real-improve-ready.png`；原因：验证产物未提交〕
 
 ## 限制
 
@@ -56,8 +61,10 @@ git_branch: "fix/user-message-extra-newline"
 - 一次性粘贴的多行文本若落在单个文本节点内，可能保持原文；逐行输入与 Shift+Enter 分行正常。〔来源：无链接：验证观察；定位：`verify-perf.mjs` 的单节点 14k 草稿；原因：验证产物未提交〕
 - 用户消息里真实存在的空行会保留，渲染器不折叠有意空行；CRLF 只算一次换行，孤立 `\r` 按 `pre-wrap` 的浏览器行为忽略。〔来源：[plan.js:17-18](../src/user-text/plan.js#L17-L18)〕
 - Desktop 窗口没有独立断言；Web GUI 与 Desktop 共用同一 bundle。〔来源：无链接：验证缺口；定位：本文件“结果”表；原因：会话无可分享链接〕
-- Improve by AI 会把草稿发送给会话所用的模型 provider；草稿不进会话日志、不进 localStorage、不进日志，关掉开关即两个槽都不注册。〔来源：[rewrite.js:1-9](../src/host/rewrite.js#L1-L9)、[client.js](../src/client.js)〕
-- 改写是整体替换：`@` 引用与斜杠命令会被清空，含引用时先弹确认；还原只留一层，且仅在草稿仍等于改写结果时可用，提示条约 8 秒后消失。〔来源：[store.js](../src/improve/store.js)、[Notice.jsx](../src/improve/Notice.jsx)〕
+- Improve by AI 会把草稿发送给会话所用的模型 provider；草稿不进会话日志、不进 localStorage、不进日志，关掉开关即两个槽都不注册。〔来源：[rewrite.js:1-9](../src/host/rewrite.js#L1-L9)、[client.js:183-185](../src/client.js#L183-L185)〕
+- 改写是整体替换：`@` 引用与斜杠命令会被清空，含引用时先弹确认；还原只留一层，且仅在草稿仍等于改写结果时可用，提示条约 8 秒后消失。〔来源：[store.js:99-105](../src/improve/store.js#L99-L105)、[store.js:147-156](../src/improve/store.js#L147-L156)、[Notice.jsx:6-24](../src/improve/Notice.jsx#L6-L24)、[Notice.jsx:51-58](../src/improve/Notice.jsx#L51-L58)〕
+- Improve by AI 现在会发送一份有上限的工作区简报：cwd、项目名、当前分支、仓库根 `AGENTS.md` 与 `README.md` 摘要；不读全局 `~/.dsh/AGENTS.md`、不读会话历史、不读 git status。〔来源：[context.js:1-250](../src/host/context.js#L1-L250)、[prompt.js:26-81](../src/host/prompt.js#L26-L81)〕
+- 真实路由的模型输出不具确定性；本轮用三条草稿取样，观察到项目名、分支自然带入且无占位行，但这不构成对所有草稿的保证。〔来源：无链接：本会话真实路由输出；定位：2026-11-03T20:26；原因：会话无可分享链接〕
 
 ## 来源
 
@@ -67,6 +74,17 @@ git_branch: "fix/user-message-extra-newline"
 - [format.js:33-95](../src/composer/format.js#L33-L95)：输入框能力边界。
 - [rewrite.js:1-9](../src/host/rewrite.js#L1-L9)：改写路由的信任栅栏、单次模型调用与“不写会话”约束。
 - [verify-improve.mjs:1-166](../scripts/verify-improve.mjs#L1-L166)：Improve by AI 的真实 GUI 验收脚本（默认拦截路由，`DSH_VERIFY_REAL=1` 打真模型）。
+- [context.js:1-250](../src/host/context.js#L1-L250)：工作区简报的采集、截断与降级。
+- [prompt.js:26-81](../src/host/prompt.js#L26-L81)：新 system prompt 与 `composeSystemPrompt()`。
+- [client.js:183-185](../src/client.js#L183-L185)：Improve 设置开关注册与移除。
+- [store.js:99-105](../src/improve/store.js#L99-L105)：改写成功后替换草稿。
+- [store.js:147-156](../src/improve/store.js#L147-L156)：还原守卫与恢复。
+- [Notice.jsx:6-24](../src/improve/Notice.jsx#L6-L24)：提示条自动消失计时。
+- [Notice.jsx:51-58](../src/improve/Notice.jsx#L51-L58)：ready 提示与还原按钮。
+- [rewrite.js:10-180](../src/host/rewrite.js#L10-L180)：简报接入路由与流式调用。
+- 无链接：本会话真实路由与 GUI 验收；定位：`.research/verify-step4/real-improve-output.txt`、`improve-report.redacted.json`、`real-improve-ready.png`；原因：验证产物未提交。
+- 无链接：本会话真实路由输出；定位：2026-11-03T20:26 的三次 `curl` 调用（含“只改 host”和英文 settings 草稿）；原因：终端输出无可分享链接。
+- 无链接：本机会话；定位：2026-11-03 的 `plugin_manager set_plugin` 与 Slots 查询；原因：运行时数据无文件。
 - 无链接：用户决策；定位：2026-11-01 本会话；原因：会话无可分享链接。
 - 无链接：验证环境；定位：`http://127.0.0.1:3099` 与 `.research/verify/`；原因：验证产物未提交。
 - 无链接：本次浏览器验证；定位：`.research/verify/user-newline-verify.json`、`user-newline-verify.png`；用途：用户消息空行结果；原因：`.research/` 未提交。
